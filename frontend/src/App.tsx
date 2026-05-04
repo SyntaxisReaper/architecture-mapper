@@ -19,7 +19,7 @@ export default function App() {
   const { user, session, profile, signOut, isConfigured } = useAuth();
   const { arch, loading, error, feedbacks, generate, refine, loadArch, clearError } = useArchitecture();
   const { history, addToHistory, removeFromHistory, clearHistory } = useHistory();
-  const { saveArchitecture, makePublic, fetchRecentFeedbacks } = useCloudHistory(user?.id);
+  const { makePublic, fetchRecentFeedbacks } = useCloudHistory(user?.id);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeHistoryId, setActiveHistoryId] = useState<string | undefined>();

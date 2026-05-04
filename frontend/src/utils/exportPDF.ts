@@ -20,15 +20,6 @@ export async function exportToPDF(arch: Architecture): Promise<void> {
     }
   };
 
-  const heading1 = (text: string) => {
-    checkPage(14);
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(80, 60, 200);
-    doc.text(text, MARGIN, y);
-    y += 9;
-  };
-
   const heading2 = (text: string) => {
     checkPage(12);
     doc.setFontSize(13);
