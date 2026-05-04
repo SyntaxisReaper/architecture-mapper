@@ -84,6 +84,10 @@ async function callGemini(systemPrompt: string, userMessage: string): Promise<Ar
 
 // ── Routes ─────────────────────────────────────────────────────────────────────
 
+app.get('/', (_req, res) => {
+  res.json({ name: 'Architecture Mapper API', status: 'ok', version: '1.0.0' });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
@@ -194,10 +198,15 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' });
 });
 
-// ── Start ──────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n🚀 Architecture Mapper API  →  http://localhost:${PORT}`);
-  console.log(`   Gemma key    : ${process.env.GEMINI_API_KEY ? '✓ set' : '✗ MISSING'}`);
-  console.log(`   Supabase      : ${isSupabaseConfigured ? '✓ connected' : '○ not configured (optional)'}`);
-  console.log();
-});
+// ── Local dev server (skipped on Vercel) ──────────────────────────────────────
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 Architecture Mapper API  →  http://localhost:${PORT}`);
+    console.log(`   Gemma key    : ${process.env.GEMINI_API_KEY ? '✓ set' : '✗ MISSING'}`);
+    console.log(`   Supabase      : ${isSupabaseConfigured ? '✓ connected' : '○ not configured (optional)'}`);
+    console.log();
+  });
+}
+
+// ── Vercel serverless export ───────────────────────────────────────────────────
+export default app;
