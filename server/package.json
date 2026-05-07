@@ -13,12 +13,12 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@google/genai": "^1.0.0",
     "@sentry/node": "^10.51.0",
     "@supabase/supabase-js": "^2.105.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "openai": "^4.96.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

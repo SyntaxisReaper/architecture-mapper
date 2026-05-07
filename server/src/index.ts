@@ -5,7 +5,7 @@ import './sentry';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { Sentry } from './sentry';
-import { GoogleGenAI } from '@google/genai';
+import OpenAI from 'openai';
 import { GenerateRequest, RefineRequest, ArchitectureJSON } from './types';
 import { buildSystemPrompt, buildRefinePrompt, assignLayerColors } from './promptBuilder';
 import {
@@ -78,29 +78,35 @@ app.options(/.*/, cors());
 
 app.use(express.json({ limit: '2mb' }));
 
-// ── Gemma 3 client (@google/genai SDK) ───────────────────────────────────────
-let _genAI: GoogleGenAI | null = null;
-function getGenAI(): GoogleGenAI {
-  if (!_genAI) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error('GEMINI_API_KEY is not set. Add it to Vercel Environment Variables.');
-    _genAI = new GoogleGenAI({ apiKey });
+// ── OpenRouter client (Gemma 3 via OpenAI-compatible API) ───────────────────
+let _openai: OpenAI | null = null;
+function getClient(): OpenAI {
+  if (!_openai) {
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set. Add it to Vercel Environment Variables.');
+    _openai = new OpenAI({
+      apiKey,
+      baseURL: 'https://openrouter.ai/api/v1',
+      defaultHeaders: {
+        'HTTP-Referer': 'https://architecture-mapper-nine.vercel.app',
+        'X-Title': 'Architecture Mapper',
+      },
+    });
   }
-  return _genAI;
+  return _openai;
 }
 
 async function callGemini(systemPrompt: string, userMessage: string): Promise<ArchitectureJSON> {
-  // Inline system prompt into user turn (Gemma 3 doesn't use systemInstruction)
-  const fullPrompt = `${systemPrompt}\n\n---\n\n${userMessage}`;
-  const result = await getGenAI().models.generateContent({
-    model: 'models/gemma-3-27b-it',   // Gemma 3 — 27B instruction-tuned
-    contents: fullPrompt,
-    config: {
-      temperature: 0.7,
-      maxOutputTokens: 8192,
-    },
+  const completion = await getClient().chat.completions.create({
+    model: 'google/gemma-3-27b-it',    // Gemma 3 27B via OpenRouter
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user',   content: userMessage },
+    ],
+    temperature: 0.7,
+    max_tokens: 8192,
   });
-  const text = result.text ?? '';
+  const text = completion.choices[0]?.message?.content ?? '';
   // Strip markdown code fences if present
   const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
   try {
@@ -108,7 +114,6 @@ async function callGemini(systemPrompt: string, userMessage: string): Promise<Ar
   } catch {
     throw new Error('Gemma 3 returned invalid JSON. Please try again.');
   }
-
 }
 
 // ── Routes ─────────────────────────────────────────────────────────────────────
@@ -231,7 +236,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`\n🚀 Architecture Mapper API  →  http://localhost:${PORT}`);
-    console.log(`   Gemma 3 key  : ${process.env.GEMINI_API_KEY ? '✓ set' : '✗ MISSING'}`);
+    console.log(`   OpenRouter key: ${process.env.OPENROUTER_API_KEY ? '✓ set' : '✗ MISSING'}`);
     console.log(`   Supabase      : ${isSupabaseConfigured ? '✓ connected' : '○ not configured (optional)'}`);
     console.log();
   });

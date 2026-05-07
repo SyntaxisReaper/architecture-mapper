@@ -1,1 +1,1 @@
-fix: add ErrorBoundary to prevent blank page on render errors; harden error normalization
+migrate to OpenRouter API for Gemma 3 (google/gemma-3-27b-it)
