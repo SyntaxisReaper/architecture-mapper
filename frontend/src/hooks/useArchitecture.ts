@@ -17,23 +17,23 @@ function normalizeErrorMessage(err: unknown): string {
     };
 
     const data = candidate.response?.data;
-    if (typeof data === 'string') return data;
+    if (typeof data === 'string') return data || 'Server error';
     if (data && typeof data === 'object') {
-      const payload = data as { error?: unknown; message?: unknown; code?: unknown };
-      const responseMessage = payload.error ?? payload.message;
-      if (typeof responseMessage === 'string') return responseMessage;
-      if (responseMessage && typeof responseMessage === 'object') return JSON.stringify(responseMessage);
-      if (payload.code && payload.error === undefined && payload.message === undefined) return String(payload.code);
+      const payload = data as Record<string, unknown>;
+      // Standard API error: { error: '...', code: '...' }
+      if (typeof payload['error'] === 'string') return payload['error'];
+      // Vercel crash format: { code: '...', message: '...' }
+      if (typeof payload['message'] === 'string') return payload['message'];
+      // Fallback: serialize whatever we got
+      return JSON.stringify(payload);
     }
 
     if (typeof candidate.message === 'string') return candidate.message;
     if (typeof candidate.error === 'string') return candidate.error;
-    if (candidate.message && typeof candidate.message === 'object') return JSON.stringify(candidate.message);
-    if (candidate.error && typeof candidate.error === 'object') return JSON.stringify(candidate.error);
-    if (candidate.code) return String(candidate.code);
+    if (candidate.code) return `Error: ${String(candidate.code)}`;
   }
 
-  return 'Something went wrong';
+  return 'Something went wrong. Please try again.';
 }
 
 export function useArchitecture() {

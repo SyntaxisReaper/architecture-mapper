@@ -1,1 +1,1 @@
-fix: add CORS headers to all Vercel routes; lazy-init genAI to prevent cold-start crash
+fix: add ErrorBoundary to prevent blank page on render errors; harden error normalization

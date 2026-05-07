@@ -7,6 +7,7 @@ import './index.css';
 import App from './App.tsx';
 import { SharePage } from './pages/SharePage.tsx';
 import { AuthProvider } from './context/AuthContext.tsx';
+import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 
 // ── Sentry (Phase 7) ──────────────────────────────────────────────────────────
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
@@ -35,13 +36,15 @@ if (POSTHOG_KEY) {
 // ── App ───────────────────────────────────────────────────────────────────────
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<App />} />
-          <Route path="/arch/:slug" element={<SharePage />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<App />} />
+            <Route path="/arch/:slug" element={<SharePage />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   </StrictMode>
 );
