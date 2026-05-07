@@ -25,21 +25,23 @@ export default function App() {
   const [activeHistoryId, setActiveHistoryId] = useState<string | undefined>();
   const [currentArchId, setCurrentArchId] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [prevArch, setPrevArch] = useState(arch);
 
   // Sync Supabase JWT → API client Authorization header
   useEffect(() => {
     setAuthToken(session?.access_token ?? null);
   }, [session]);
 
-  // Track arch changes to add to history and cloud-save
-  const [prevArch, setPrevArch] = useState(arch);
-  if (arch !== prevArch) {
-    setPrevArch(arch);
-    if (arch) {
-      addToHistory(arch);
-      // Cloud save happens inside generate/refine via API response _archId
+  // Add generated architectures to local history after render.
+  useEffect(() => {
+    if (!arch || arch === prevArch) {
+      return;
     }
-  }
+
+    setPrevArch(arch);
+    addToHistory(arch);
+    // Cloud save happens inside generate/refine via API response _archId
+  }, [arch, prevArch, addToHistory]);
 
   const handleGenerate = useCallback(async (payload: Parameters<typeof generate>[0]) => {
     let enrichedPayload = payload;

@@ -135,7 +135,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
                 {error && (
                   <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                     <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-red-400">{error}</p>
+                    <p className="text-xs text-red-400">{String(error)}</p>
                   </div>
                 )}
 

@@ -4,6 +4,38 @@ import type { Architecture, GeneratePayload, RefinePayload } from '../types';
 
 type ArchWithMeta = Architecture & { _archId?: string };
 
+function normalizeErrorMessage(err: unknown): string {
+  if (typeof err === 'string') return err;
+  if (err instanceof Error) return err.message;
+
+  if (err && typeof err === 'object') {
+    const candidate = err as {
+      response?: { data?: unknown };
+      message?: unknown;
+      error?: unknown;
+      code?: unknown;
+    };
+
+    const data = candidate.response?.data;
+    if (typeof data === 'string') return data;
+    if (data && typeof data === 'object') {
+      const payload = data as { error?: unknown; message?: unknown; code?: unknown };
+      const responseMessage = payload.error ?? payload.message;
+      if (typeof responseMessage === 'string') return responseMessage;
+      if (responseMessage && typeof responseMessage === 'object') return JSON.stringify(responseMessage);
+      if (payload.code && payload.error === undefined && payload.message === undefined) return String(payload.code);
+    }
+
+    if (typeof candidate.message === 'string') return candidate.message;
+    if (typeof candidate.error === 'string') return candidate.error;
+    if (candidate.message && typeof candidate.message === 'object') return JSON.stringify(candidate.message);
+    if (candidate.error && typeof candidate.error === 'object') return JSON.stringify(candidate.error);
+    if (candidate.code) return String(candidate.code);
+  }
+
+  return 'Something went wrong';
+}
+
 export function useArchitecture() {
   const [arch, setArch] = useState<Architecture | null>(null);
   const [loading, setLoading] = useState(false);
@@ -19,10 +51,7 @@ export function useArchitecture() {
       setFeedbacks([]);
       return result;
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
-        (err instanceof Error ? err.message : 'Something went wrong');
-      setError(msg);
+      setError(normalizeErrorMessage(err));
       return null;
     } finally {
       setLoading(false);
@@ -46,10 +75,7 @@ export function useArchitecture() {
         setArch(result);
         setFeedbacks(newFeedbacks);
       } catch (err: unknown) {
-        const msg =
-          (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
-          (err instanceof Error ? err.message : 'Something went wrong');
-        setError(msg);
+        setError(normalizeErrorMessage(err));
       } finally {
         setLoading(false);
       }

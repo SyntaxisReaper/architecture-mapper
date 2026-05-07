@@ -1,8 +1,8 @@
 # Architecture Mapper
 
-> AI-powered software architecture designer. Describe any project idea and get a comprehensive, production-ready architecture in seconds — powered by Claude.
+> AI-powered software architecture designer. Describe any project idea and get a comprehensive, production-ready architecture in seconds — powered by Gemini.
 
-![Architecture Mapper](https://img.shields.io/badge/Powered%20by-Claude-8b5cf6?style=flat-square)
+![Architecture Mapper](https://img.shields.io/badge/Powered%20by-Gemini-8b5cf6?style=flat-square)
 ![Stack](https://img.shields.io/badge/Stack-React%20%2B%20Express%20%2B%20Supabase-6366f1?style=flat-square)
 
 ---
@@ -14,7 +14,7 @@
 Edit `.env.local` in the root:
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-...   # Required — get from console.anthropic.com
+GEMINI_API_KEY=...             # Required — get from Google AI Studio or Vertex AI
 ```
 
 ### 2. Start both servers
@@ -101,7 +101,7 @@ Add all `VITE_*` env vars in the Vercel dashboard.
 cd server
 vercel --prod
 ```
-Add `ANTHROPIC_API_KEY`, `SUPABASE_*`, `SENTRY_DSN`, `FRONTEND_URL` in Vercel.
+Add `GEMINI_API_KEY`, `SUPABASE_*`, `SENTRY_DSN`, `FRONTEND_URL` in Vercel.
 
 ### GitHub Actions CI/CD
 Add these secrets to your GitHub repo:
@@ -135,7 +135,7 @@ architecture-mapper/
 └── server/                     # Express + TypeScript
     ├── src/
     │   ├── index.ts            # Routes + rate limiter + Sentry
-    │   ├── promptBuilder.ts    # Claude system prompt
+    │   ├── promptBuilder.ts    # Gemini system prompt
     │   ├── supabase.ts         # Admin DB client
     │   ├── sentry.ts           # Error tracking
     │   └── types.ts            # Shared types
