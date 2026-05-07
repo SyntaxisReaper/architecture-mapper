@@ -72,6 +72,10 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+// Handle OPTIONS preflight for all routes
+app.options('*', cors());
+
 app.use(express.json({ limit: '2mb' }));
 
 // ── Gemma 3 client (@google/genai SDK) ───────────────────────────────────────

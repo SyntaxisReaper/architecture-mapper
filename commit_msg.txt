@@ -1,0 +1,1 @@
+fix CORS: add edge-level headers in vercel.json and OPTIONS preflight handler
