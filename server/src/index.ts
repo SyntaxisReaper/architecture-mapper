@@ -5,7 +5,7 @@ import './sentry';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { Sentry } from './sentry';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { GenerateRequest, RefineRequest, ArchitectureJSON } from './types';
 import { buildSystemPrompt, buildRefinePrompt, assignLayerColors } from './promptBuilder';
 import {
@@ -74,29 +74,28 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '2mb' }));
 
-// ── Gemma client ──────────────────────────────────────────────────────────────
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const gemmaModel = genAI.getGenerativeModel({
-  model: 'gemma-3-27b-it',            // Latest Gemma 3 — 27B instruction-tuned
-  generationConfig: {
-    temperature: 0.7,
-    maxOutputTokens: 8192,
-  },
-});
+// ── Gemma 3 client (@google/genai SDK) ───────────────────────────────────────
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 async function callGemini(systemPrompt: string, userMessage: string): Promise<ArchitectureJSON> {
-  // Gemma doesn't support systemInstruction — inline it into the user turn
+  // Inline system prompt into user turn (Gemma 3 doesn't use systemInstruction)
   const fullPrompt = `${systemPrompt}\n\n---\n\n${userMessage}`;
-  const result = await gemmaModel.generateContent(fullPrompt);
-  const text = result.response.text();
+  const result = await genAI.models.generateContent({
+    model: 'models/gemma-3-27b-it',   // Gemma 3 — 27B instruction-tuned
+    contents: fullPrompt,
+    config: {
+      temperature: 0.7,
+      maxOutputTokens: 8192,
+    },
+  });
+  const text = result.text ?? '';
   // Strip markdown code fences if present
   const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
   try {
     return assignLayerColors(JSON.parse(cleaned));
   } catch {
-    throw new Error('Gemma returned invalid JSON. Please try again.');
+    throw new Error('Gemma 3 returned invalid JSON. Please try again.');
   }
-
 }
 
 // ── Routes ─────────────────────────────────────────────────────────────────────
@@ -219,7 +218,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`\n🚀 Architecture Mapper API  →  http://localhost:${PORT}`);
-    console.log(`   Gemma key    : ${process.env.GEMINI_API_KEY ? '✓ set' : '✗ MISSING'}`);
+    console.log(`   Gemma 3 key  : ${process.env.GEMINI_API_KEY ? '✓ set' : '✗ MISSING'}`);
     console.log(`   Supabase      : ${isSupabaseConfigured ? '✓ connected' : '○ not configured (optional)'}`);
     console.log();
   });
