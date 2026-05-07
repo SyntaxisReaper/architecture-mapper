@@ -79,12 +79,20 @@ app.options('*', cors());
 app.use(express.json({ limit: '2mb' }));
 
 // ── Gemma 3 client (@google/genai SDK) ───────────────────────────────────────
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+let _genAI: GoogleGenAI | null = null;
+function getGenAI(): GoogleGenAI {
+  if (!_genAI) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error('GEMINI_API_KEY is not set. Add it to Vercel Environment Variables.');
+    _genAI = new GoogleGenAI({ apiKey });
+  }
+  return _genAI;
+}
 
 async function callGemini(systemPrompt: string, userMessage: string): Promise<ArchitectureJSON> {
   // Inline system prompt into user turn (Gemma 3 doesn't use systemInstruction)
   const fullPrompt = `${systemPrompt}\n\n---\n\n${userMessage}`;
-  const result = await genAI.models.generateContent({
+  const result = await getGenAI().models.generateContent({
     model: 'models/gemma-3-27b-it',   // Gemma 3 — 27B instruction-tuned
     contents: fullPrompt,
     config: {
@@ -100,6 +108,7 @@ async function callGemini(systemPrompt: string, userMessage: string): Promise<Ar
   } catch {
     throw new Error('Gemma 3 returned invalid JSON. Please try again.');
   }
+
 }
 
 // ── Routes ─────────────────────────────────────────────────────────────────────

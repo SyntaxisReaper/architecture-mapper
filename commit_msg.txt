@@ -1,1 +1,1 @@
-fix: handle OPTIONS preflight at Vercel edge with 204 status
+fix: add CORS headers to all Vercel routes; lazy-init genAI to prevent cold-start crash
